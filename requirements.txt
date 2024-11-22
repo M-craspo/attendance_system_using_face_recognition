@@ -1,5 +1,5 @@
 cmake
-dlib==19.22.99
+dlib-bin
 opencv-python-headless
 numpy
 face_recognition

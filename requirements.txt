@@ -1,3 +1,4 @@
+dlib
 opencv-python-headless
 numpy
 face_recognition

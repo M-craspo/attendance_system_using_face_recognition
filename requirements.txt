@@ -1,5 +1,7 @@
+streamlit
 cmake
-dlib-bin
+git+https://github.com/davisking/dlib.git@master#egg=dlib
+opencv-python
 opencv-python-headless
 numpy
 face_recognition

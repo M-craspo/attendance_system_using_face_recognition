@@ -1,6 +1,6 @@
 streamlit
 cmake
-dlib @ https://github.com/z-mahmud22/Dlib_Windows_Python3.x/blob/main/dlib-19.22.99-cp310-cp310-win_amd64.whl
+dlib
 opencv-python
 opencv-python-headless
 numpy

@@ -1,0 +1,16 @@
+# Core dependencies
+streamlit>=1.28.0
+opencv-python>=4.8.0
+numpy>=1.24.0
+pandas>=2.0.0
+
+# Face recognition libraries
+face-recognition>=1.3.0
+dlib>=19.24.0
+
+# Custom dependencies (assuming these are local modules)
+# simple_facerec
+# Attendance
+
+# Time and file handling
+python-dateutil>=2.8.2

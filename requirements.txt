@@ -1,3 +1,4 @@
+cmake
 dlib
 opencv-python-headless
 numpy

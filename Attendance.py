@@ -14,24 +14,10 @@ class AttendanceSystem:
         if not os.path.exists(self.attendance_file):
             with open(self.attendance_file, 'w', newline='') as f:
                 writer = csv.writer(f)
-                writer.writerow(['Name', 'Date', 'Time', 'Timestamp'])
-    
-    def person_exists_today(self, name):
-        """Check if person already exists in today's records"""
-        current_date = datetime.now().strftime("%Y-%m-%d")
-        
-        try:
-            df = pd.read_csv(self.attendance_file)
-            existing = df[(df['Name'] == name) & (df['Date'] == current_date)]
-            return not existing.empty
-        except pd.errors.EmptyDataError:
-            return False
-        except Exception as e:
-            print(f"Error checking person existence: {e}")
-            return False
+                writer.writerow(['Name', 'Date', 'Time', 'Timestamp', 'Check_in_Number'])
 
     def mark_attendance(self, name):
-        """Mark attendance with more robust error handling"""
+        """Mark attendance at specified intervals"""
         if not name or name == "Unknown":
             return False
 
@@ -41,32 +27,49 @@ class AttendanceSystem:
             current_time = current_datetime.strftime("%H:%M:%S")
             timestamp = current_datetime.timestamp()
 
-            # Avoid duplicate attendance on the same day
-            if not self.person_exists_today(name):
-                with open(self.attendance_file, 'a', newline='') as f:
-                    writer = csv.writer(f)
-                    writer.writerow([name, current_date, current_time, timestamp])
-                
-                # Update attendance_data for Streamlit
-                record = {
-                    'Name': name, 
-                    'Date': current_date, 
-                    'Time': current_time,
-                    'Timestamp': timestamp
-                }
-                self.attendance_data.append(record)
-                return True
-            return False
+            # Count today's check-ins for this person
+            try:
+                df = pd.read_csv(self.attendance_file)
+                today_entries = df[(df['Name'] == name) & (df['Date'] == current_date)]
+                check_in_number = len(today_entries) + 1
+            except (pd.errors.EmptyDataError, FileNotFoundError):
+                check_in_number = 1
+
+            # Record the attendance
+            with open(self.attendance_file, 'a', newline='') as f:
+                writer = csv.writer(f)
+                writer.writerow([name, current_date, current_time, timestamp, check_in_number])
+            
+            # Update attendance_data for Streamlit
+            record = {
+                'Name': name, 
+                'Date': current_date, 
+                'Time': current_time,
+                'Timestamp': timestamp,
+                'Check_in_Number': check_in_number
+            }
+            self.attendance_data.append(record)
+            return True
+
         except Exception as e:
             print(f"Error marking attendance: {e}")
             return False
 
     def get_attendance_summary(self):
-        """Generate attendance summary"""
+        """Generate detailed attendance summary"""
         try:
             df = pd.read_csv(self.attendance_file)
-            summary = df.groupby(['Date', 'Name']).size().reset_index(name='Attendance_Count')
+            
+            # Group by date and name to get summary statistics
+            summary = df.groupby(['Date', 'Name']).agg({
+                'Check_in_Number': 'max',  # Total check-ins
+                'Time': ['first', 'last']  # First and last check-in times
+            }).reset_index()
+            
+            # Flatten column names and rename for clarity
+            summary.columns = ['Date', 'Name', 'Total_Check_ins', 'First_Check_in', 'Last_Check_in']
             return summary
+            
         except Exception as e:
             print(f"Error generating summary: {e}")
             return pd.DataFrame()

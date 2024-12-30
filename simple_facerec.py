@@ -2,16 +2,14 @@ import cv2
 import os
 import glob
 import numpy as np
-import face_recognition  # The library for face encoding and recognition
-
-
-#from face_detection_recognition import FaceDetectionRecognition
+import face_recognition
 
 class SimpleFacerec:
-    def __init__(self, frame_resizing=0.7):
+    def __init__(self, frame_resizing=0.7, threshold=0.8):
         self.known_face_encodings = []
         self.known_face_names = []
         self.frame_resizing = frame_resizing
+        self.threshold = threshold  # Added threshold parameter
 
     def load_encoding_images(self, images_path):
         """Load known face encodings and names."""
@@ -60,16 +58,24 @@ class SimpleFacerec:
             matches = face_recognition.compare_faces(self.known_face_encodings, face_encoding)
             name = "Unknown"
 
-            # Use the known face with the smallest distance to the new face
+            # Calculate face distances
             face_distances = face_recognition.face_distance(self.known_face_encodings, face_encoding)
+            
             if len(face_distances) > 0:
                 best_match_index = np.argmin(face_distances)
-                if matches[best_match_index]:
+                min_distance = face_distances[best_match_index]
+                
+                # Only consider it a match if the distance is below the threshold
+                if matches[best_match_index] and min_distance < self.threshold:
                     name = self.known_face_names[best_match_index]
+                else:
+                    name = "Unknown"
+                    
             face_names.append(name)
 
         # Adjust face locations to the original frame size
         scale = 1 / self.frame_resizing
-        face_locations = [(int(y1 * scale), int(x2 * scale), int(y2 * scale), int(x1 * scale)) for (y1, x2, y2, x1) in face_locations]
+        face_locations = [(int(y1 * scale), int(x2 * scale), int(y2 * scale), int(x1 * scale)) 
+                         for (y1, x2, y2, x1) in face_locations]
 
         return face_locations, face_names
